@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#060d1a" />
+  <title>Still Waters</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel+Decorative:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #7fdbca; --teal-light: #a8eddf;
+      --blue: #89b4fa; --blue-light: #b9d4ff;
+      --amber: #f5a97f; --amber-light: #ffd0b0;
+      --void: #c084fc; --void-light: #e9d5ff;
+    }
+    html, body { height: 100%; overflow: hidden; background: #060d1a; font-family: 'Cormorant Garamond', Georgia, serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #060d1a; transition: background 1.8s ease; }
+
+    /* Stars */
+    #stars { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .star { position: absolute; border-radius: 50%; background: white; animation: twinkle var(--dur) var(--delay) ease-in-out infinite; }
+    @keyframes twinkle { 0%,100%{opacity:0.15} 50%{opacity:0.8} }
+
+    /* Screens */
+    .screen { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 32px 24px; width: 100%; max-width: 420px; text-align: center; position: relative; z-index: 10; animation: fadeUp 0.8s ease forwards; }
+    .screen.active { display: flex; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Typography */
+    .label { font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--teal); opacity: 0.75; }
+    .title-big { font-family: 'Cinzel Decorative', serif; font-size: 40px; line-height: 1.15; color: #e8f4f0; font-weight: 400; }
+    .subtitle { font-size: 15px; color: rgba(200,230,225,0.55); line-height: 1.75; font-style: italic; }
+    .mantra-text { font-size: 14px; color: rgba(200,230,225,0.5); font-style: italic; letter-spacing: 0.05em; min-height: 22px; animation: shimmer 4s ease-in-out infinite; }
+    @keyframes shimmer { 0%,100%{opacity:0.45} 50%{opacity:1} }
+
+    /* Buttons */
+    .btn { padding: 15px 48px; background: transparent; border: 1.5px solid rgba(127,219,202,0.55); border-radius: 40px; color: var(--teal-light); font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; cursor: pointer; transition: background 0.3s, border-color 0.3s; }
+    .btn:hover,.btn:active { background: rgba(127,219,202,0.1); border-color: var(--teal); }
+    .btn-ghost { background: none; border: none; color: rgba(255,210,180,0.35); font-family: 'Cormorant Garamond', serif; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; padding: 4px; }
+    .btn-amber { padding: 14px 42px; background: transparent; border: 1.5px solid rgba(245,169,127,0.5); border-radius: 40px; color: #ffd0b0; font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; }
+    .btn-amber:hover,.btn-amber:active { background: rgba(245,169,127,0.1); }
+    .btn-void { padding: 14px 42px; background: transparent; border: 1.5px solid rgba(192,132,252,0.5); border-radius: 40px; color: #e9d5ff; font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; }
+    .btn-void:hover,.btn-void:active { background: rgba(192,132,252,0.1); }
+    .btn-sm { padding: 10px 24px; font-size: 11px; letter-spacing: 0.18em; }
+
+    /* Features */
+    .features { display: flex; flex-direction: column; gap: 8px; color: rgba(180,220,215,0.5); font-size: 13px; letter-spacing: 0.04em; }
+    .feature-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+
+    /* Home orb */
+    .orb-preview-wrap { position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; animation: floatAnim 3s ease-in-out infinite; }
+    .orb-ring-home { position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 1.5px solid rgba(127,219,202,0.3); animation: pulseRing 2.5s ease-out infinite; }
+    .orb-home { width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #a8eddf, #2a8b78); box-shadow: 0 0 40px 10px rgba(127,219,202,0.3); animation: glowPulse 3s ease-in-out infinite; }
+
+    /* Level dots */
+    .level-dots { display: flex; gap: 10px; align-items: center; }
+    .level-dot { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.15); transition: all 0.6s ease; }
+
+    /* Orb */
+    .orb-container { position: relative; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; }
+    .orb-outer-ring { position: absolute; border-radius: 50%; border: 1px solid var(--teal); transition: opacity 0.5s, transform 0.15s ease-out; }
+    #orb-main { width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, var(--teal-light), var(--teal) 55%, #0a1628); transition: transform 0.15s ease-out, box-shadow 0.3s; display: flex; align-items: center; justify-content: center; font-size: 18px; color: rgba(10,22,40,0.6); }
+
+    .breath-label { font-size: 28px; font-style: italic; font-weight: 300; transition: color 0.6s; color: var(--teal-light); }
+    .progress-bar-wrap { width: 160px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; margin: 8px auto 0; overflow: hidden; }
+    #progress-fill { height: 100%; border-radius: 1px; background: var(--teal); width: 0%; transition: width 0.1s linear; }
+
+    /* Stats */
+    .stats-row { display: flex; gap: 36px; }
+    .stat-box { text-align: center; }
+    .stat-val { font-size: 24px; font-style: italic; color: var(--teal-light); }
+    .stat-label { font-size: 10px; color: rgba(180,220,215,0.4); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; }
+    .hint-text { font-size: 10px; color: rgba(180,220,215,0.22); letter-spacing: 0.15em; text-transform: uppercase; }
+
+    /* Complete */
+    .complete-orb { width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffd0b0, #f5a97f); box-shadow: 0 0 40px 15px rgba(245,169,127,0.35); animation: floatAnim 3s ease-in-out infinite, glowAmber 3s ease-in-out infinite; }
+    @keyframes glowAmber { 0%,100%{box-shadow:0 0 30px 8px rgba(245,169,127,0.25)} 50%{box-shadow:0 0 60px 20px rgba(245,169,127,0.5)} }
+    .complete-title { font-family: 'Cinzel Decorative', serif; font-size: 32px; color: #ffd0b0; line-height: 1.25; }
+    .complete-sub { color: rgba(255,210,180,0.55); font-size: 15px; line-height: 1.75; font-style: italic; }
+
+    /* Night Realm unlock banner */
+    .unlock-banner { display: none; flex-direction: column; align-items: center; gap: 6px; padding: 14px 24px; border: 1px solid rgba(192,132,252,0.4); border-radius: 16px; background: rgba(192,132,252,0.06); }
+    .unlock-banner.show { display: flex; }
+    .unlock-banner p { font-size: 13px; color: rgba(220,195,255,0.65); font-style: italic; }
+
+    /* Ripple */
+    .ripple { position: absolute; width: 10px; height: 10px; margin-left: -5px; margin-top: -5px; border-radius: 50%; border: 1.5px solid var(--teal); pointer-events: none; animation: rippleAnim 1.2s ease-out forwards; z-index: 5; }
+    @keyframes rippleAnim { 0%{transform:scale(1);opacity:0.8} 100%{transform:scale(18);opacity:0} }
+
+    /* Sound toggle */
+    #sound-toggle { position: absolute; top: 18px; right: 18px; z-index: 20; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: background 0.2s; }
+    #sound-toggle:hover { background: rgba(255,255,255,0.1); }
+
+    /* History button */
+    #history-btn { position: absolute; top: 18px; left: 18px; z-index: 20; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: background 0.2s; }
+    #history-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* History panel */
+    #history-panel { position: fixed; inset: 0; z-index: 100; background: rgba(6,13,26,0.96); display: none; flex-direction: column; align-items: center; padding: 60px 24px 40px; overflow-y: auto; animation: fadeUp 0.4s ease; }
+    #history-panel.open { display: flex; }
+    .history-title { font-family: 'Cinzel Decorative', serif; font-size: 22px; color: #e8f4f0; margin-bottom: 4px; }
+    .history-sub { font-size: 13px; color: rgba(200,230,225,0.4); font-style: italic; margin-bottom: 24px; }
+    .history-empty { color: rgba(200,230,225,0.3); font-style: italic; font-size: 14px; margin-top: 40px; }
+    .history-list { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; }
+    .history-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(255,255,255,0.03); }
+    .hi-left { text-align: left; }
+    .hi-date { font-size: 12px; color: rgba(200,230,225,0.4); letter-spacing: 0.08em; }
+    .hi-level { font-size: 14px; font-style: italic; margin-top: 2px; }
+    .hi-right { text-align: right; }
+    .hi-score { font-size: 20px; font-style: italic; }
+    .hi-breaths { font-size: 10px; color: rgba(200,230,225,0.4); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px; }
+    .history-stats { display: flex; gap: 28px; margin-bottom: 20px; }
+    .hs-box { text-align: center; }
+    .hs-val { font-size: 28px; font-style: italic; color: var(--teal-light); }
+    .hs-lbl { font-size: 10px; color: rgba(180,220,215,0.4); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; }
+    .close-btn { margin-top: 28px; background: none; border: 1px solid rgba(255,255,255,0.12); border-radius: 40px; color: rgba(200,230,225,0.4); font-family: 'Cormorant Garamond', serif; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; padding: 10px 28px; cursor: pointer; }
+
+    /* Night Realm void orb */
+    .void-orb-home { width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e9d5ff, #7c3aed); box-shadow: 0 0 40px 10px rgba(192,132,252,0.35); animation: glowVoid 3s ease-in-out infinite; }
+    @keyframes glowVoid { 0%,100%{box-shadow:0 0 30px 8px rgba(192,132,252,0.2)} 50%{box-shadow:0 0 60px 20px rgba(192,132,252,0.5)} }
+
+    /* Void screen */
+    .void-complete-orb { width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e9d5ff, #7c3aed); animation: floatAnim 3s ease-in-out infinite, glowVoid 3s ease-in-out infinite; }
+
+    /* Keyframes */
+    @keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    @keyframes pulseRing { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.85);opacity:0} }
+    @keyframes glowPulse { 0%,100%{box-shadow:0 0 30px 8px rgba(127,219,202,0.2)} 50%{box-shadow:0 0 55px 18px rgba(127,219,202,0.45)} }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="stars"></div>
+
+  <!-- UI overlays -->
+  <div id="history-btn" onclick="openHistory()" title="Session History">📊</div>
+  <div id="sound-toggle" onclick="toggleSound()" title="Toggle Sound">🔔</div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="label">A Mindful Experience</div>
+    <div class="title-big">Still<br>Waters</div>
+    <div class="subtitle">A breathing journey to calm the nervous system<br>and expand your awareness.</div>
+    <div class="orb-preview-wrap">
+      <div class="orb-ring-home"></div>
+      <div class="orb-home"></div>
+    </div>
+    <div class="features">
+      <div class="feature-row"><div class="dot"></div>4 Consciousness Levels</div>
+      <div class="feature-row"><div class="dot"></div>Guided Breath Cycles</div>
+      <div class="feature-row"><div class="dot"></div>Touch to Create Ripples</div>
+    </div>
+    <button class="btn" onclick="startJourney(false)">Begin Journey</button>
+    <div id="night-realm-unlock" class="unlock-banner">
+      <span style="font-size:18px">🌑</span>
+      <p>The Night Realm awaits...</p>
+      <button class="btn-void btn-sm" onclick="startJourney(true)">Enter Night Realm</button>
+    </div>
+  </div>
+
+  <!-- BREATHING -->
+  <div id="screen-breathing" class="screen">
+    <div class="level-dots">
+      <div class="level-dot" id="dot-0" style="width:16px"></div>
+      <div class="level-dot" id="dot-1" style="width:16px"></div>
+      <div class="level-dot" id="dot-2" style="width:16px"></div>
+      <div class="level-dot" id="dot-3" style="width:16px;display:none"></div>
+    </div>
+    <div class="label" id="level-label">Level 1 — Awakening</div>
+    <div class="orb-container" id="orb-container">
+      <div class="orb-outer-ring" id="ring-3" style="width:240px;height:240px;opacity:0.15"></div>
+      <div class="orb-outer-ring" id="ring-2" style="width:220px;height:220px;opacity:0.2"></div>
+      <div class="orb-outer-ring" id="ring-1" style="width:200px;height:200px;opacity:0.35"></div>
+      <div id="orb-main">·</div>
+    </div>
+    <div>
+      <div class="breath-label" id="breath-label">Breathe In</div>
+      <div class="progress-bar-wrap"><div id="progress-fill"></div></div>
+    </div>
+    <div class="mantra-text" id="mantra-display">"You are present."</div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="stat-breaths">0</div><div class="stat-label">Breaths</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-score">0</div><div class="stat-label">✦ Presence</div></div>
+    </div>
+    <div class="hint-text">Touch anywhere to create ripples</div>
+  </div>
+
+  <!-- COMPLETE (standard) -->
+  <div id="screen-complete" class="screen">
+    <div class="label" style="color:var(--amber)">Session Complete</div>
+    <div class="complete-title">You have<br>arrived.</div>
+    <div class="complete-orb"></div>
+    <div class="complete-sub">Through stillness, you touched all three<br>realms of consciousness.</div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="final-score" style="color:#ffd0b0">0</div><div class="stat-label" style="color:rgba(255,210,180,0.4)">Presence</div></div>
+      <div class="stat-box"><div class="stat-val" id="final-breaths" style="color:#ffd0b0">0</div><div class="stat-label" style="color:rgba(255,210,180,0.4)">Breaths</div></div>
+    </div>
+    <div id="night-unlock-msg" style="display:none;font-size:13px;color:rgba(192,132,252,0.7);font-style:italic;padding:10px 0">✨ The Night Realm has been unlocked</div>
+    <button class="btn-amber" onclick="startJourney(false)">Journey Again</button>
+    <button class="btn-ghost" onclick="showScreen('home')">Return Home</button>
+  </div>
+
+  <!-- COMPLETE (night) -->
+  <div id="screen-complete-night" class="screen">
+    <div class="label" style="color:var(--void);letter-spacing:0.35em">The Void Complete</div>
+    <div class="complete-title" style="color:#e9d5ff">Beyond the<br>Veil.</div>
+    <div class="void-complete-orb"></div>
+    <div class="complete-sub" style="color:rgba(220,195,255,0.55)">You have dissolved into pure awareness.<br>Nothing remains but the witness.</div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="final-score-night" style="color:#e9d5ff">0</div><div class="stat-label" style="color:rgba(220,195,255,0.4)">Presence</div></div>
+      <div class="stat-box"><div class="stat-val" id="final-breaths-night" style="color:#e9d5ff">0</div><div class="stat-label" style="color:rgba(220,195,255,0.4)">Breaths</div></div>
+    </div>
+    <button class="btn-void" onclick="startJourney(true)">Return to the Void</button>
+    <button class="btn-ghost" onclick="showScreen('home')">Return Home</button>
+  </div>
+
+  <!-- HISTORY PANEL -->
+  <div id="history-panel">
+    <div class="history-title">Your Journey</div>
+    <div class="history-sub">Sessions completed</div>
+    <div class="history-stats">
+      <div class="hs-box"><div class="hs-val" id="hs-total">0</div><div class="hs-lbl">Sessions</div></div>
+      <div class="hs-box"><div class="hs-val" id="hs-breaths">0</div><div class="hs-lbl">Breaths</div></div>
+      <div class="hs-box"><div class="hs-val" id="hs-score">0</div><div class="hs-lbl">Presence</div></div>
+    </div>
+    <div class="history-list" id="history-list"></div>
+    <button class="close-btn" onclick="closeHistory()">Close</button>
+  </div>
+</div>
+
+<script>
+// ── Levels ───────────────────────────────────────────────────────────────
+const LEVELS = [
+  { name:"Awakening",    color:"#7fdbca", light:"#a8eddf", bg:"#0a1628", inhaleDur:4000, holdDur:1600, exhaleDur:4400, baseFreq:174 },
+  { name:"Flowing",      color:"#89b4fa", light:"#b9d4ff", bg:"#0d1117", inhaleDur:5000, holdDur:2000, exhaleDur:5000, baseFreq:285 },
+  { name:"Transcending", color:"#f5a97f", light:"#ffd0b0", bg:"#150d0a", inhaleDur:6000, holdDur:2400, exhaleDur:6000, baseFreq:396 },
+];
+const NIGHT_LEVEL = { name:"Night Realm", color:"#c084fc", light:"#e9d5ff", bg:"#08010f", inhaleDur:7000, holdDur:3500, exhaleDur:7000, baseFreq:528 };
+
+const MANTRAS = [
+  "You are present.","Breathe in peace.","Let go of tension.",
+  "You are enough.","This moment is whole.","Your mind is clear.",
+  "Peace flows through you.","You are the observer.","All is well.",
+  "Stillness is your nature.","You are deeply aware.","The breath is the anchor.",
+];
+const NIGHT_MANTRAS = [
+  "You are the witness.","Beyond thought, beyond form.","Dissolve into the infinite.",
+  "Pure awareness remains.","No past, no future. Only now.","You are the silence between breaths.",
+  "The observer cannot be observed.","Emptiness holds everything.","You are already free.",
+];
+
+const BREATHS_PER_LEVEL = 7;
+const STORAGE_KEY = "stillwaters_history";
+
+// ── State ─────────────────────────────────────────────────────────────────
+let levelIdx = 0, breathCount = 0, score = 0;
+let breathPhase = "inhale";
+let phaseTimer = null, progressRAF = null;
+let phaseStart = 0, phaseDuration = 0, running = false;
+let isNightMode = false;
+let totalBreathsThisSession = 0;
+let soundEnabled = true;
+let audioCtx = null;
+let activeNodes = [];
+
+// ── History ───────────────────────────────────────────────────────────────
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function saveHistory(entry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  if (h.length > 30) h.pop();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); } catch {}
+}
+function isNightUnlocked() {
+  return loadHistory().some(e => !e.isNight && e.completed);
+}
+
+// ── Stars ─────────────────────────────────────────────────────────────────
+(function buildStars() {
+  const wrap = document.getElementById("stars");
+  for (let i = 0; i < 70; i++) {
+    const s = document.createElement("div");
+    s.className = "star";
+    const size = 0.5 + Math.random() * 1.8;
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;--dur:${2+Math.random()*3}s;--delay:${Math.random()*5}s;`;
+    wrap.appendChild(s);
+  }
+})();
+
+// ── Audio (Web Audio API) ─────────────────────────────────────────────────
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function stopAllSound() {
+  activeNodes.forEach(n => { try { n.stop(); } catch {} });
+  activeNodes = [];
+}
+
+function playBowl(freq, duration, volume = 0.18) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.998, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+    activeNodes.push(osc);
+  } catch {}
+}
+
+function playAmbience(freq) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    // Drone pad
+    [1, 1.5, 2, 2.67].forEach((mult, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = i === 0 ? "sine" : "sine";
+      osc.frequency.value = freq * mult * 0.5;
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.025 / (i + 1), ctx.currentTime + 3);
+      osc.start();
+      activeNodes.push(osc);
+    });
+  } catch {}
+}
+
+function playPhaseSound(phase, lv) {
+  if (!soundEnabled) return;
+  const freqs = { inhale: lv.baseFreq * 1.5, hold: lv.baseFreq * 2, exhale: lv.baseFreq };
+  const durs  = { inhale: 1.5, hold: 0.8, exhale: 2 };
+  const vols  = { inhale: 0.12, hold: 0.08, exhale: 0.1 };
+  playBowl(freqs[phase], durs[phase], vols[phase]);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById("sound-toggle").textContent = soundEnabled ? "🔔" : "🔕";
+  if (!soundEnabled) stopAllSound();
+  else if (running) playAmbience(currentLevel().baseFreq);
+}
+
+// ── Haptics ───────────────────────────────────────────────────────────────
+function haptic(type) {
+  if (!navigator.vibrate) return;
+  const patterns = { inhale: [30], hold: [15,30,15], exhale: [60], ripple: [10], complete: [50,80,50,80,100] };
+  navigator.vibrate(patterns[type] || [20]);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function currentLevel() { return isNightMode ? NIGHT_LEVEL : LEVELS[levelIdx]; }
+function currentMantras() { return isNightMode ? NIGHT_MANTRAS : MANTRAS; }
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => { s.classList.remove("active"); s.style.animation = "none"; });
+  const el = document.getElementById("screen-" + id);
+  el.classList.add("active");
+  void el.offsetWidth;
+  el.style.animation = "";
+  if (id === "home") {
+    document.getElementById("night-realm-unlock").classList.toggle("show", isNightUnlocked());
+  }
+}
+
+function applyLevel() {
+  const lv = currentLevel();
+  document.getElementById("app").style.background = lv.bg;
+  document.getElementById("level-label").textContent = isNightMode
+    ? "Secret Level — Night Realm"
+    : `Level ${levelIdx+1} — ${lv.name}`;
+
+  const numDots = isNightMode ? 1 : 3;
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById("dot-"+i);
+    if (i === 3) {
+      d.style.display = isNightMode ? "block" : "none";
+    }
+    if (isNightMode) {
+      d.style.background = i === 3 ? NIGHT_LEVEL.color : "rgba(255,255,255,0.1)";
+      d.style.width = i === 3 ? "32px" : "16px";
+    } else {
+      if (i < 3) {
+        d.style.background = i <= levelIdx ? LEVELS[i].color : "rgba(255,255,255,0.15)";
+        d.style.width = i === levelIdx ? "32px" : "16px";
+      }
+    }
+  }
+
+  const orb = document.getElementById("orb-main");
+  orb.style.background = `radial-gradient(circle at 38% 32%, ${lv.light}, ${lv.color} 55%, ${lv.bg})`;
+  [1,2,3].forEach(n => document.getElementById("ring-"+n).style.borderColor = lv.color);
+  document.getElementById("progress-fill").style.background = lv.color;
+  document.querySelector(".breath-label").style.color = lv.light;
+  document.getElementById("stat-breaths").style.color = lv.light;
+  document.getElementById("stat-score").style.color = lv.light;
+}
+
+// ── Ripple ────────────────────────────────────────────────────────────────
+document.getElementById("screen-breathing").addEventListener("pointerdown", function(e) {
+  if (e.target.closest("button")) return;
+  const rect = this.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width) * 100;
+  const y = ((e.clientY - rect.top) / rect.height) * 100;
+  const rip = document.createElement("div");
+  rip.className = "ripple";
+  rip.style.left = x + "%"; rip.style.top = y + "%";
+  rip.style.borderColor = currentLevel().color;
+  document.getElementById("app").appendChild(rip);
+  setTimeout(() => rip.remove(), 1300);
+  score += 2;
+  document.getElementById("stat-score").textContent = score;
+  haptic("ripple");
+  if (soundEnabled) playBowl(currentLevel().baseFreq * 1.2, 0.6, 0.06);
+});
+
+// ── Breath engine ─────────────────────────────────────────────────────────
+function startPhase(phase) {
+  breathPhase = phase;
+  const lv = currentLevel();
+  const durs = { inhale: lv.inhaleDur, hold: lv.holdDur, exhale: lv.exhaleDur };
+  phaseDuration = durs[phase];
+  phaseStart = performance.now();
+
+  const labels = { inhale:"Breathe In", hold:"Hold", exhale:"Breathe Out" };
+  const colors = { inhale: lv.light, hold: "#ffffff", exhale: lv.color };
+  const icons  = { inhale:"↑", hold:"·", exhale:"↓" };
+
+  document.getElementById("breath-label").textContent = labels[phase];
+  document.getElementById("breath-label").style.color  = colors[phase];
+  document.getElementById("orb-main").textContent = icons[phase];
+
+  haptic(phase);
+  playPhaseSound(phase, lv);
+
+  cancelAnimationFrame(progressRAF);
+  function animProgress(now) {
+    if (!running) return;
+    const p = Math.min((now - phaseStart) / phaseDuration, 1);
+    document.getElementById("progress-fill").style.width = (p * 100) + "%";
+
+    let scale;
+    if (phase === "inhale")       scale = 0.72 + p * 0.53;
+    else if (phase === "hold")    scale = 1.25;
+    else                          scale = 1.25 - p * 0.53;
+
+    const orb = document.getElementById("orb-main");
+    orb.style.transform = `scale(${scale})`;
+    const glow = 40 + scale * 28;
+    const glowAlpha = Math.round((0.18 + scale * 0.2) * 255).toString(16).padStart(2,"0");
+    orb.style.boxShadow = `0 0 ${glow}px ${Math.round(scale*14)}px ${currentLevel().color}${glowAlpha}`;
+
+    [1,2,3].forEach(n => {
+      const ring = document.getElementById("ring-"+n);
+      const base = [0.35, 0.2, 0.15][n-1];
+      ring.style.opacity = phase === "hold" ? base * 1.8 : base;
+      ring.style.transform = `scale(${0.95 + p * 0.08 * (phase === "exhale" ? -1 : 1)})`;
+    });
+
+    if (p < 1) { progressRAF = requestAnimationFrame(animProgress); }
+  }
+  progressRAF = requestAnimationFrame(animProgress);
+
+  clearTimeout(phaseTimer);
+  phaseTimer = setTimeout(() => {
+    if (!running) return;
+    if (phase === "inhale") { startPhase("hold"); }
+    else if (phase === "hold") { startPhase("exhale"); }
+    else {
+      breathCount++;
+      totalBreathsThisSession++;
+      score += 10;
+      document.getElementById("stat-breaths").textContent = breathCount;
+      document.getElementById("stat-score").textContent = score;
+
+      if (breathCount % 3 === 0) {
+        const m = currentMantras()[Math.floor(Math.random() * currentMantras().length)];
+        document.getElementById("mantra-display").textContent = `"${m}"`;
+      }
+
+      if (breathCount >= BREATHS_PER_LEVEL) {
+        breathCount = 0;
+        if (!isNightMode && levelIdx < LEVELS.length - 1) {
+          levelIdx++;
+          applyLevel();
+          stopAllSound();
+          playAmbience(currentLevel().baseFreq);
+        } else {
+          running = false;
+          endSession();
+          return;
+        }
+      }
+      startPhase("inhale");
+    }
+  }, phaseDuration);
+}
+
+function startJourney(nightMode) {
+  isNightMode = nightMode || false;
+  levelIdx = 0; breathCount = 0; score = 0; totalBreathsThisSession = 0; running = true;
+  clearTimeout(phaseTimer); cancelAnimationFrame(progressRAF);
+  document.getElementById("stat-breaths").textContent = "0";
+  document.getElementById("stat-score").textContent = "0";
+  const mantras = currentMantras();
+  document.getElementById("mantra-display").textContent = `"${mantras[0]}"`;
+
+  // Show/hide dot-3
+  document.getElementById("dot-3").style.display = nightMode ? "block" : "none";
+
+  showScreen("breathing");
+  applyLevel();
+  stopAllSound();
+  playAmbience(currentLevel().baseFreq);
+  setTimeout(() => { if (running) startPhase("inhale"); }, 600);
+}
+
+function endSession() {
+  clearTimeout(phaseTimer); cancelAnimationFrame(progressRAF);
+  stopAllSound();
+  haptic("complete");
+
+  const levelsCompleted = isNightMode ? "Night Realm" : LEVELS[2].name;
+  saveHistory({
+    date: new Date().toISOString(),
+    score,
+    breaths: totalBreathsThisSession,
+    level: levelsCompleted,
+    isNight: isNightMode,
+    completed: true,
+  });
+
+  if (isNightMode) {
+    document.getElementById("final-score-night").textContent = score;
+    document.getElementById("final-breaths-night").textContent = totalBreathsThisSession;
+    document.getElementById("app").style.background = NIGHT_LEVEL.bg;
+    showScreen("complete-night");
+  } else {
+    document.getElementById("final-score").textContent = score;
+    document.getElementById("final-breaths").textContent = totalBreathsThisSession;
+    document.getElementById("app").style.background = "#150d0a";
+    // Show night unlock message if first time completing
+    const history = loadHistory();
+    const completions = history.filter(e => !e.isNight && e.completed).length;
+    document.getElementById("night-unlock-msg").style.display = completions === 1 ? "block" : "none";
+    showScreen("complete");
+  }
+
+  // Play completion bowl
+  setTimeout(() => playBowl(currentLevel().baseFreq * 2, 4, 0.2), 400);
+}
+
+// ── History Panel ─────────────────────────────────────────────────────────
+function openHistory() {
+  const h = loadHistory();
+  const panel = document.getElementById("history-panel");
+  const list  = document.getElementById("history-list");
+
+  const totalSessions = h.length;
+  const totalBreaths  = h.reduce((a, e) => a + (e.breaths || 0), 0);
+  const totalScore    = h.reduce((a, e) => a + (e.score  || 0), 0);
+
+  document.getElementById("hs-total").textContent   = totalSessions;
+  document.getElementById("hs-breaths").textContent = totalBreaths;
+  document.getElementById("hs-score").textContent   = totalScore;
+
+  if (h.length === 0) {
+    list.innerHTML = '<div class="history-empty">No sessions yet.<br>Begin your first journey.</div>';
+  } else {
+    const levelColors = {
+      "Awakening": "#7fdbca", "Flowing": "#89b4fa",
+      "Transcending": "#f5a97f", "Night Realm": "#c084fc"
+    };
+    list.innerHTML = h.map(e => {
+      const d = new Date(e.date);
+      const dateStr = d.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+      const timeStr = d.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit" });
+      const col = e.isNight ? "#c084fc" : levelColors[e.level] || "#7fdbca";
+      return `<div class="history-item">
+        <div class="hi-left">
+          <div class="hi-date">${dateStr} · ${timeStr}</div>
+          <div class="hi-level" style="color:${col}">${e.isNight ? "🌑 " : ""}${e.level}</div>
+        </div>
+        <div class="hi-right">
+          <div class="hi-score" style="color:${col}">${e.score}</div>
+          <div class="hi-breaths">${e.breaths} breaths</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  panel.classList.add("open");
+}
+
+function closeHistory() {
+  document.getElementById("history-panel").classList.remove("open");
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener("load", () => {
+  if (isNightUnlocked()) {
+    document.getElementById("night-realm-unlock").classList.add("show");
+  }
+});
+</script>
+</body>
+</html>
